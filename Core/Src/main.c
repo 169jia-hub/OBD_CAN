@@ -117,6 +117,7 @@ int main(void)
    ui_init();
 1111111
 2222222
+3333333
   // 4. CAN ¹ıÂËÆ÷ÅäÖÃ
   CAN_FilterTypeDef sFilterConfig;
   sFilterConfig.FilterBank = 0;
