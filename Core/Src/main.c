@@ -116,6 +116,7 @@ int main(void)
   // 3. UI 界面初始化
    ui_init();
 1111111
+2222222
   // 4. CAN 过滤器配置
   CAN_FilterTypeDef sFilterConfig;
   sFilterConfig.FilterBank = 0;
