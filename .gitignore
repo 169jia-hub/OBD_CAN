@@ -1,0 +1,17 @@
+# Keil 编译产物和中间文件
+*.o
+*.d
+*.crf
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.htm
+*.lnp
+*.sct
+*.dep
+Objects/
+Listings/
+*.uvguix.*
+DebugConfig/
