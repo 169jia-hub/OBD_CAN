@@ -21,7 +21,7 @@
 #include "ui.h"
 #include "lvgl.h"
 #include "lv_port_disp.h"
-// °ÑÄÇÁ½¸ö±äÁ¿Òı¹ıÀ´£¬ÈÃ main.c ÄÜ¿´µ½ËüÃÇ
+// æŠŠé‚£ä¸¤ä¸ªå˜é‡å¼•è¿‡æ¥ï¼Œè®© main.c èƒ½çœ‹åˆ°å®ƒä»¬
 extern volatile uint8_t dma_flush_flag;
 extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END Includes */
@@ -57,7 +57,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 int fputc(int ch, FILE *f)
 {
-    // ½« printf µÄ×Ö·ûÍ¨¹ı´®¿Ú 1 (huart1) ·¢ËÍ³öÈ¥
+    // å°† printf çš„å­—ç¬¦é€šè¿‡ä¸²å£ 1 (huart1) å‘é€å‡ºå»
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return ch;
 }
@@ -99,26 +99,24 @@ int main(void)
   MX_USART1_UART_Init();
   MX_FSMC_Init();
   /* USER CODE BEGIN 2 */
-  // 1. µ×²ãÆÁÄ»³õÊ¼»¯
+  // 1. åº•å±‚å±å¹•åˆå§‹åŒ–
 	uint32_t *test_sram = (uint32_t *)0x6C000000;
-  uint8_t sram_is_alive = 1; // Ä¬ÈÏËü»î×Å
+  uint8_t sram_is_alive = 1; // é»˜è®¤å®ƒæ´»ç€
   
 
   ILI9806G_Init();
-  ILI9806G_GramScan(5); // ¸úËæÇı¶¯Ä¬ÈÏÉ¨Ãè·½Ïò£¬±ÜÃâÇ¿ĞĞĞ´ËÀ
+  ILI9806G_GramScan(5); // è·Ÿéšé©±åŠ¨é»˜è®¤æ‰«ææ–¹å‘ï¼Œé¿å…å¼ºè¡Œå†™æ­»
   ILI9806G_Clear(0, 0, 800, 480);
 
-  GTP_Init_Panel(); // ³õÊ¼»¯´¥ÃşÆÁ
-  // 2. LVGL ºËĞÄºÍ½Ó¿Ú³õÊ¼»¯
+  GTP_Init_Panel(); // åˆå§‹åŒ–è§¦æ‘¸å±
+  // 2. LVGL æ ¸å¿ƒå’Œæ¥å£åˆå§‹åŒ–
   lv_init();
   lv_port_disp_init();
   lv_port_indev_init();
-  // 3. UI ½çÃæ³õÊ¼»¯
+  // 3. UI ç•Œé¢åˆå§‹åŒ–
    ui_init();
-1111111
-2222222
-3333333
-  // 4. CAN ¹ıÂËÆ÷ÅäÖÃ
+
+  // 4. CAN è¿‡æ»¤å™¨é…ç½®
   CAN_FilterTypeDef sFilterConfig;
   sFilterConfig.FilterBank = 0;
   sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
@@ -131,7 +129,7 @@ int main(void)
 
   HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig);
   HAL_CAN_Start(&hcan1);
- // printf("\r\n---HAL ¿â CAN »Ø»·²âÊÔÆô¶¯£¡---\r\n");
+ // printf("\r\n---HAL åº“ CAN å›ç¯æµ‹è¯•å¯åŠ¨ï¼---\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -152,25 +150,25 @@ int main(void)
       uint32_t current_tick = HAL_GetTick();
 
       // ==========================================
-      // ÈÎÎñ 1£ºLVGL ĞÄÔàÆğ²«Æ÷ (ÑÏ¸ñ 5ms ÅÜÒ»´Î)
+      // ä»»åŠ¡ 1ï¼šLVGL å¿ƒè„èµ·æå™¨ (ä¸¥æ ¼ 5ms è·‘ä¸€æ¬¡)
       // ==========================================
-        //1ÏÈËã³öÕæÊµ¹ıÈ¥ÁË¶àÉÙºÁÃë
+        //1å…ˆç®—å‡ºçœŸå®è¿‡å»äº†å¤šå°‘æ¯«ç§’
         uint32_t delta_time = current_tick - last_lvgl_time;
-        // 2. Èç¹ûÊ±¼ä²î´óÓÚµÈÓÚ 5ms£¬²ÅÖ´ĞĞË¢ĞÂ
+        // 2. å¦‚æœæ—¶é—´å·®å¤§äºç­‰äº 5msï¼Œæ‰æ‰§è¡Œåˆ·æ–°
       if (delta_time >= 5)
       {
-          // 3. ¸üĞÂÉÏÒ»´ÎµÄÊ±¼ä´Á
+          // 3. æ›´æ–°ä¸Šä¸€æ¬¡çš„æ—¶é—´æˆ³
           last_lvgl_time = current_tick;
           
-          // 4. ? Áé»êËùÔÚ£º¹ıÈ¥ÁË¶àÉÙÊ±¼ä£¬¾Í¼Ó¶àÉÙÊ±¼ä£¡
+          // 4. ? çµé­‚æ‰€åœ¨ï¼šè¿‡å»äº†å¤šå°‘æ—¶é—´ï¼Œå°±åŠ å¤šå°‘æ—¶é—´ï¼
           lv_tick_inc(delta_time); 
           
-          // 5. ÈÃ LVGL Ë¢ÆÁ
+          // 5. è®© LVGL åˆ·å±
           lv_timer_handler();
       }
 			
         // ==========================================
-        // ÈÎÎñ 2£ºCAN ·¢ËÍÈÎÎñ (ÑÏ¸ñ 2000ms ·¢ËÍÒ»´Î)
+        // ä»»åŠ¡ 2ï¼šCAN å‘é€ä»»åŠ¡ (ä¸¥æ ¼ 2000ms å‘é€ä¸€æ¬¡)
         // ==========================================
         if (current_tick - last_can_tx_time >= 2000)
         {
@@ -186,13 +184,13 @@ int main(void)
           TxHeader.TransmitGlobalTime = DISABLE;
           
           if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) == HAL_OK){
-         //   printf("ÒÑ·¢ËÍ OBD ÇëÇóÖ¡...\r\n");
+         //   printf("å·²å‘é€ OBD è¯·æ±‚å¸§...\r\n");
           }
         }
         // ==========================================
      
         // ==========================================
-        // ÈÎÎñ 4£ºCAN ½ÓÊÕÈÎÎñ (ÓĞ¿Õ¾Í¼ì²â£¬ÎŞĞèÑÓÊ±)
+        // ä»»åŠ¡ 4ï¼šCAN æ¥æ”¶ä»»åŠ¡ (æœ‰ç©ºå°±æ£€æµ‹ï¼Œæ— éœ€å»¶æ—¶)
         // ==========================================
         if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0) 
         {
@@ -200,7 +198,7 @@ int main(void)
           uint8_t RxData[8] = {0};
           
           HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData);
-        //  printf("ÊÕµ½»Ø»·Êı¾İ£¡ID:0x%x,ÄÚÈİ£º", RxHeader.StdId);
+        //  printf("æ”¶åˆ°å›ç¯æ•°æ®ï¼ID:0x%x,å†…å®¹ï¼š", RxHeader.StdId);
           for(int i = 0; i < RxHeader.DLC; i++){
          //   printf("%02x ", RxData[i]);
           }
