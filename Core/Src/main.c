@@ -21,7 +21,8 @@
 #include "ui.h"
 #include "lvgl.h"
 #include "lv_port_disp.h"
-// æŠŠé‚£ä¸¤ä¸ªå˜é‡å¼•è¿‡æ¥ï¼Œè®© main.c èƒ½çœ‹åˆ°å®ƒä»¬
+// °ÑÄÇÁ½¸ö±äÁ¿Òı¹ıÀ´£¬ÈÃ main.c ÄÜ¿´µ½ËüÃÇ
+
 extern volatile uint8_t dma_flush_flag;
 extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END Includes */
@@ -57,12 +58,10 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 int fputc(int ch, FILE *f)
 {
-    // å°† printf çš„å­—ç¬¦é€šè¿‡ä¸²å£ 1 (huart1) å‘é€å‡ºå»
+    // ½« printf µÄ×Ö·ûÍ¨¹ı´®¿Ú 1 (huart1) ·¢ËÍ³öÈ¥
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return ch;
 }
-
-
 
 /* USER CODE END 0 */
 
@@ -98,38 +97,51 @@ int main(void)
   MX_CAN1_Init();
   MX_USART1_UART_Init();
   MX_FSMC_Init();
+  MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
-  // 1. åº•å±‚å±å¹•åˆå§‹åŒ–
-	uint32_t *test_sram = (uint32_t *)0x6C000000;
-  uint8_t sram_is_alive = 1; // é»˜è®¤å®ƒæ´»ç€
+  // 1. µ×²ãÆÁÄ»³õÊ¼»¯
+  uint32_t *test_sram = (uint32_t *)0x6C000000;
+  uint8_t sram_is_alive = 1; // Ä¬ÈÏËü»î×Å
   
-
   ILI9806G_Init();
-  ILI9806G_GramScan(5); // è·Ÿéšé©±åŠ¨é»˜è®¤æ‰«ææ–¹å‘ï¼Œé¿å…å¼ºè¡Œå†™æ­»
+  ILI9806G_GramScan(5); // ¸úËæÇı¶¯Ä¬ÈÏÉ¨Ãè·½Ïò£¬±ÜÃâÇ¿ÖÆĞ´´í
   ILI9806G_Clear(0, 0, 800, 480);
 
-  GTP_Init_Panel(); // åˆå§‹åŒ–è§¦æ‘¸å±
-  // 2. LVGL æ ¸å¿ƒå’Œæ¥å£åˆå§‹åŒ–
+  GTP_Init_Panel(); // ³õÊ¼»¯´¥ÃşÆÁ
+  // 2. LVGL ºËĞÄºÍ½Ó¿Ú³õÊ¼»¯
   lv_init();
   lv_port_disp_init();
   lv_port_indev_init();
-  // 3. UI ç•Œé¢åˆå§‹åŒ–
-   ui_init();
-6666
-  // 4. CAN è¿‡æ»¤å™¨é…ç½®
-  CAN_FilterTypeDef sFilterConfig;
-  sFilterConfig.FilterBank = 0;
+  // 3. UI ½çÃæ³õÊ¼»¯
+  ui_init();
+  // 4. CAN ¹ıÂËÆ÷ÅäÖÃ
+  CAN_FilterTypeDef sFilterConfig = {0}; 
+  sFilterConfig.FilterBank = 14;
   sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
   sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
   sFilterConfig.FilterIdHigh = 0x0000;
   sFilterConfig.FilterIdLow = 0x0000;
+  sFilterConfig.FilterMaskIdHigh = 0x0000; 
+  sFilterConfig.FilterMaskIdLow = 0x0000;  
   sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
   sFilterConfig.FilterActivation = ENABLE;
   sFilterConfig.SlaveStartFilterBank  = 14;
 
-  HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig);
+  // STM32F4 ±ØĞë½èÓÃÀÏ´ó¸ç hcan1 È¥·ÖÅä CAN2 µÄ¹ıÂËÆ÷£¡
+  HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig); 
+
+  // °Ñ hcan1 Ò²Ò»²¢Æô¶¯£¬·ÀÖ¹ CAN2 °Õ¹¤
   HAL_CAN_Start(&hcan1);
- // printf("\r\n---HAL åº“ CAN å›ç¯æµ‹è¯•å¯åŠ¨ï¼---\r\n");
+  HAL_CAN_Start(&hcan2);
+
+  // ========================================================
+  // ¡¾¹Ø¼üĞŞ¸´¡¿£ºÂÖÑ¯±äÁ¿±ØĞë·ÅÔÚ while(1) Íâ²¿£¬·ñÔòÃ¿´ÎÑ­»·¶¼»áÇåÁã£¡
+  // ========================================================
+  uint32_t last_lvgl_time = 0;
+  uint32_t last_can_tx_time = 0;
+  uint8_t obd_pids[] = {0x0D, 0x05, 0x42, 0x11, 0x04, 0x0F, 0X10};
+  uint8_t current_pid_index = 0; 
+  // ========================================================
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -140,73 +152,129 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  uint32_t last_lvgl_time = 0;
-  uint32_t last_can_tx_time = 0;
-  uint32_t last_blink_time = 0;
-  uint8_t blink_state = 0;
+        printf("Main Loop Running! Ö÷Ñ­»·ÔËĞĞÖĞ\r\n");
+        uint32_t current_tick = HAL_GetTick();
 
-  while (1)
-  {
-      uint32_t current_tick = HAL_GetTick();
-
-      // ==========================================
-      // ä»»åŠ¡ 1ï¼šLVGL å¿ƒè„èµ·æå™¨ (ä¸¥æ ¼ 5ms è·‘ä¸€æ¬¡)
-      // ==========================================
-        //1å…ˆç®—å‡ºçœŸå®è¿‡å»äº†å¤šå°‘æ¯«ç§’
+        // ==========================================
+        // ÈÎÎñ 1£ºLVGL ĞÄÔàÆğ²«Æ÷ (ÑÏ¸ñ 5ms ÅÜÒ»´Î)
+        // ==========================================
         uint32_t delta_time = current_tick - last_lvgl_time;
-        // 2. å¦‚æœæ—¶é—´å·®å¤§äºç­‰äº 5msï¼Œæ‰æ‰§è¡Œåˆ·æ–°
-      if (delta_time >= 5)
-      {
-          // 3. æ›´æ–°ä¸Šä¸€æ¬¡çš„æ—¶é—´æˆ³
-          last_lvgl_time = current_tick;
-          
-          // 4. ? çµé­‚æ‰€åœ¨ï¼šè¿‡å»äº†å¤šå°‘æ—¶é—´ï¼Œå°±åŠ å¤šå°‘æ—¶é—´ï¼
-          lv_tick_inc(delta_time); 
-          
-          // 5. è®© LVGL åˆ·å±
-          lv_timer_handler();
-      }
-			
-        // ==========================================
-        // ä»»åŠ¡ 2ï¼šCAN å‘é€ä»»åŠ¡ (ä¸¥æ ¼ 2000ms å‘é€ä¸€æ¬¡)
-        // ==========================================
-        if (current_tick - last_can_tx_time >= 2000)
+        if (delta_time >= 5)
         {
-          last_can_tx_time = current_tick;
-          CAN_TxHeaderTypeDef TxHeader;
-          uint32_t TxMailbox;
-          uint8_t TxData[8] = {0x02, 0x01, 0x0c, 0x00, 0x00, 0x00,0x00, 0x00};
-          
-          TxHeader.StdId = 0x7DF;                       
-          TxHeader.ExtId = 0X00;  
-          TxHeader.RTR = CAN_RTR_DATA;     
-          TxHeader.DLC = 8;     
-          TxHeader.TransmitGlobalTime = DISABLE;
-          
-          if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) == HAL_OK){
-         //   printf("å·²å‘é€ OBD è¯·æ±‚å¸§...\r\n");
-          }
+            last_lvgl_time = current_tick;
+            lv_tick_inc(delta_time); 
+            lv_timer_handler();
+        }
+          printf("LVGL Heartbeat! LVGL ĞÄÔàÆğ²«Æ÷\r\n");  
+        // ==========================================
+        // ÈÎÎñ 2£ºCAN ÂÖÑ¯·¢ËÍÈÎÎñ (Ã¿ 100ms ÇĞ»»·¢ËÍÒ»¸ö PID)
+        // ==========================================
+        if (current_tick - last_can_tx_time >= 100)
+        {
+            last_can_tx_time = current_tick;
+
+            CAN_TxHeaderTypeDef TxHeader = {0}; 
+            uint32_t TxMailbox;
+            
+            uint8_t target_pid = obd_pids[current_pid_index];
+            uint8_t TxData[8] = {0x02, 0x01, target_pid, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+            TxHeader.StdId = 0x7DF;
+            TxHeader.ExtId = 0x00;
+            TxHeader.IDE = CAN_ID_STD;  
+            TxHeader.RTR = CAN_RTR_DATA;
+            TxHeader.DLC = 8;
+            TxHeader.TransmitGlobalTime = DISABLE;
+            
+            if (HAL_CAN_AddTxMessage(&hcan2, &TxHeader, TxData, &TxMailbox) == HAL_OK)
+            {
+                printf("TX Success! ·¢ËÍ³É¹¦\r\n"); 
+                current_pid_index++;
+                if (current_pid_index >= sizeof(obd_pids)) 
+                {
+                  current_pid_index = 0; 
+                }
+            } 
+            else 
+            {
+                printf("TX Error! ·¢ËÍÓÊÏä±»¶ÂËÀ\r\n"); 
+            }   
         }
         // ==========================================
      
         // ==========================================
-        // ä»»åŠ¡ 4ï¼šCAN æ¥æ”¶ä»»åŠ¡ (æœ‰ç©ºå°±æ£€æµ‹ï¼Œæ— éœ€å»¶æ—¶)
+        // ÈÎÎñ 3: CAN ½ÓÊÕÓë UI äÖÈ¾ÈÎÎñ (ÎŞ×èÈû¼ì²â)
         // ==========================================
-        if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0) 
+        if (HAL_CAN_GetRxFifoFillLevel(&hcan2, CAN_RX_FIFO0) > 0) 
         {
-          CAN_RxHeaderTypeDef RxHeader;
-          uint8_t RxData[8] = {0};
-          
-          HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData);
-        //  printf("æ”¶åˆ°å›ç¯æ•°æ®ï¼ID:0x%x,å†…å®¹ï¼š", RxHeader.StdId);
-          for(int i = 0; i < RxHeader.DLC; i++){
-         //   printf("%02x ", RxData[i]);
-          }
-        //  printf("\r\n.............\r\n");
-        }
-  }
-}
+            CAN_RxHeaderTypeDef RxHeader;
+            uint8_t RxData[8] = {0};
 
+            if(HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
+            {
+                printf("Got Data! ÊÕµ½Êı¾İ\r\n");
+                
+                if (RxHeader.StdId == 0x7E8) 
+                {
+                    if (RxData[1] == 0x41) 
+                    {
+                        uint8_t pid = RxData[2];
+                        uint8_t A = RxData[3];
+                        uint8_t B = RxData[4];
+
+                        switch (pid) 
+                        {
+                            case 0x0D: // ³µËÙ (Speed)
+                            {
+                                uint8_t speed = A;
+                                lv_arc_set_value(ui_Arc_Speed, speed);
+                                lv_label_set_text_fmt(ui_Label_Speed, "%d", speed);
+                                break;
+                            }
+                            case 0x05: // Ë®ÎÂ (Temp)
+                            {
+                                int8_t temp = A - 40;
+                                lv_bar_set_value(ui_BarTemp, temp, LV_ANIM_ON);
+                                lv_label_set_text_fmt(ui_Label_Temp, "Temp: %dC", temp);
+                                break;
+                            }
+                            case 0x42: // ¿ØÖÆÄ£¿éµçÑ¹ (Volt)
+                            {
+                                float volt = ((A * 256.0f) + B) / 1000.0f;
+                                lv_bar_set_value(ui_BarVolt, (int32_t)(volt * 10), LV_ANIM_ON); 
+                                lv_label_set_text_fmt(ui_Label_Volt, "Volt: %.1fV", volt);
+                                break;
+                            }
+                            case 0x11: // ½ÚÆøÃÅÎ»ÖÃ (Throttle Pos)
+                            {
+                                float throttle = (A * 100.0f) / 255.0f;
+                                lv_label_set_text_fmt(ui_LabelThrottleVal, "%.1f %%", throttle);
+                                break;
+                            }
+                            case 0x04: // ·¢¶¯»ú¸ººÉ (Engine Load)
+                            {
+                                float load = (A * 100.0f) / 255.0f;
+                                lv_label_set_text_fmt(ui_Label_Engine_Load_, "%.1f %%", load);
+                                break;
+                            }
+                            case 0x0F: // ½øÆøÎÂ¶È (Intake Temp)
+                            {
+                                int8_t intake_temp = A - 40;
+                                lv_label_set_text_fmt(ui_Label_Intake_Temp, "%d C", intake_temp);
+                                break;
+                            }
+                            case 0x10: // ¿ÕÆøÁ÷Á¿ (MAF)
+                            {
+                                float maf = ((A * 256.0f) + B) / 100.0f;
+                                lv_label_set_text_fmt(ui_Label_MAF_Air_Flow_, "%.1f g/s", maf);
+                                break;
+                            }
+                        } 
+                    }
+                }
+            } 
+        } 
+  }
   /* USER CODE END 3 */
 }
 
