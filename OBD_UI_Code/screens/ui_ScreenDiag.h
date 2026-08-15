@@ -24,14 +24,14 @@ extern lv_obj_t * ui_Label9;
 extern lv_obj_t * ui_Button2;
 extern lv_obj_t * ui_Label10;
 extern lv_obj_t * ui_Panel2;
-extern lv_obj_t * ui_Label11;
+extern lv_obj_t * ui_LabelThrottleVal;
 extern lv_obj_t * ui_Label12;
 extern lv_obj_t * ui_Label13;
 extern lv_obj_t * ui_Label14;
-extern lv_obj_t * ui_Label15;
-extern lv_obj_t * ui_Label16;
-extern lv_obj_t * ui_Label17;
-extern lv_obj_t * ui_Label18;
+extern lv_obj_t * ui_Label_Throttle_Pos;
+extern lv_obj_t * ui_Label_Engine_Load_;
+extern lv_obj_t * ui_Label_Intake_Temp;
+extern lv_obj_t * ui_Label_MAF_Air_Flow_;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus
