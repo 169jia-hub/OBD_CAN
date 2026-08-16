@@ -756,5 +756,4 @@
 
 #endif /*LV_CONF_H*/
 #define LV_INDEV_DEF_SCROLL_LIMIT 30
-
 #endif /*End of "Content enable"*/

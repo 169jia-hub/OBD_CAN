@@ -21,6 +21,9 @@
 #include "ui.h"
 #include "lvgl.h"
 #include "lv_port_disp.h"
+#include "can.h"
+#include "lv_port_indev.h"
+#include "gt9xx.h"
 // 把那两个变量引过来，让 main.c 能看到它们
 
 extern volatile uint8_t dma_flush_flag;
@@ -94,14 +97,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_CAN1_Init();
   MX_USART1_UART_Init();
   MX_FSMC_Init();
   MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
   // 1. 底层屏幕初始化
-  uint32_t *test_sram = (uint32_t *)0x6C000000;
-  uint8_t sram_is_alive = 1; // 默认它活着
+
   
   ILI9806G_Init();
   ILI9806G_GramScan(5); // 跟随驱动默认扫描方向，避免强制写错
@@ -127,11 +128,11 @@ int main(void)
   sFilterConfig.FilterActivation = ENABLE;
   sFilterConfig.SlaveStartFilterBank  = 14;
 
-  // STM32F4 必须借用老大哥 hcan1 去分配 CAN2 的过滤器！
-  HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig); 
+  // STM32F4 必须借用老大哥 hcan2 去分配 CAN2 的过滤器！
+  HAL_CAN_ConfigFilter(&hcan2, &sFilterConfig); 
 
-  // 把 hcan1 也一并启动，防止 CAN2 罢工
-  HAL_CAN_Start(&hcan1);
+  // 把 hcan2 也一并启动，防止 CAN2 罢工
+
   HAL_CAN_Start(&hcan2);
 
   // ========================================================
@@ -152,7 +153,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-        printf("Main Loop Running! 主循环运行中\r\n");
         uint32_t current_tick = HAL_GetTick();
 
         // ==========================================
@@ -165,7 +165,7 @@ int main(void)
             lv_tick_inc(delta_time); 
             lv_timer_handler();
         }
-          printf("LVGL Heartbeat! LVGL 心脏起搏器\r\n");  
+         
         // ==========================================
         // 任务 2：CAN 轮询发送任务 (每 100ms 切换发送一个 PID)
         // ==========================================
@@ -241,23 +241,34 @@ int main(void)
                             case 0x42: // 控制模块电压 (Volt)
                             {
                                 float volt = ((A * 256.0f) + B) / 1000.0f;
+                                // 【核心修改】：拆出整数和小数
+                                int volt_int = (int)volt;                          // 整数部分
+                                int volt_frac = (int)((volt - volt_int) * 10);     // 提取 1 位小数 (乘10)
+                                
                                 lv_bar_set_value(ui_BarVolt, (int32_t)(volt * 10), LV_ANIM_ON); 
-                                lv_label_set_text_fmt(ui_Label_Volt, "Volt: %.1fV", volt);
+                                // 用 %d.%d 组合起来
+                                lv_label_set_text_fmt(ui_Label_Volt, "Volt: %d.%dV", volt_int, volt_frac);
                                 break;
                             }
                             case 0x11: // 节气门位置 (Throttle Pos)
                             {
                                 float throttle = (A * 100.0f) / 255.0f;
-                                lv_label_set_text_fmt(ui_LabelThrottleVal, "%.1f %%", throttle);
+                                int th_int = (int)throttle;
+                                int th_frac = (int)((throttle - th_int) * 10);
+                                
+                                lv_label_set_text_fmt(ui_Label_Throttle_Val, "%d.%d %%", th_int, th_frac);
                                 break;
                             }
                             case 0x04: // 发动机负荷 (Engine Load)
                             {
                                 float load = (A * 100.0f) / 255.0f;
-                                lv_label_set_text_fmt(ui_Label_Engine_Load_, "%.1f %%", load);
+                                int load_int = (int)load;
+                                int load_frac = (int)((load - load_int) * 10);
+                                
+                                lv_label_set_text_fmt(ui_Label_Engine_Load_, "%d.%d %%", load_int, load_frac);
                                 break;
                             }
-                            case 0x0F: // 进气温度 (Intake Temp)
+                            case 0x0F: // 进气温度 (Intake Temp) - 整数，不用改
                             {
                                 int8_t intake_temp = A - 40;
                                 lv_label_set_text_fmt(ui_Label_Intake_Temp, "%d C", intake_temp);
@@ -266,7 +277,10 @@ int main(void)
                             case 0x10: // 空气流量 (MAF)
                             {
                                 float maf = ((A * 256.0f) + B) / 100.0f;
-                                lv_label_set_text_fmt(ui_Label_MAF_Air_Flow_, "%.1f g/s", maf);
+                                int maf_int = (int)maf;
+                                int maf_frac = (int)((maf - maf_int) * 10);
+                                
+                                lv_label_set_text_fmt(ui_Label_MAF_Air_Flow_, "%d.%d g/s", maf_int, maf_frac);
                                 break;
                             }
                         } 

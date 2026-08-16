@@ -15,11 +15,11 @@ lv_obj_t * ui_Label9 = NULL;
 lv_obj_t * ui_Button2 = NULL;
 lv_obj_t * ui_Label10 = NULL;
 lv_obj_t * ui_Panel2 = NULL;
-lv_obj_t * ui_LabelThrottleVal = NULL;
+lv_obj_t * ui_Label11 = NULL;
 lv_obj_t * ui_Label12 = NULL;
 lv_obj_t * ui_Label13 = NULL;
 lv_obj_t * ui_Label14 = NULL;
-lv_obj_t * ui_Label_Throttle_Pos = NULL;
+lv_obj_t * ui_Label_Throttle_Val = NULL;
 lv_obj_t * ui_Label_Engine_Load_ = NULL;
 lv_obj_t * ui_Label_Intake_Temp = NULL;
 lv_obj_t * ui_Label_MAF_Air_Flow_ = NULL;
@@ -103,7 +103,7 @@ void ui_ScreenDiag_screen_init(void)
     lv_obj_set_width(ui_Button2, 100);
     lv_obj_set_height(ui_Button2, 50);
     lv_obj_set_x(ui_Button2, 4);
-    lv_obj_set_y(ui_Button2, 11);
+    lv_obj_set_y(ui_Button2, 20);
     lv_obj_set_align(ui_Button2, LV_ALIGN_BOTTOM_MID);
     lv_obj_add_flag(ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -127,15 +127,15 @@ void ui_ScreenDiag_screen_init(void)
     lv_obj_set_style_bg_opa(ui_Panel2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_Panel2, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_LabelThrottleVal = lv_label_create(ui_Panel2);
-    lv_obj_set_width(ui_LabelThrottleVal, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_LabelThrottleVal, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_LabelThrottleVal, -80);
-    lv_obj_set_y(ui_LabelThrottleVal, -110);
-    lv_obj_set_align(ui_LabelThrottleVal, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_LabelThrottleVal, "Throttle Pos :");
-    lv_obj_set_style_text_color(ui_LabelThrottleVal, lv_color_hex(0xA69D9D), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_LabelThrottleVal, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Label11 = lv_label_create(ui_Panel2);
+    lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label11, -80);
+    lv_obj_set_y(ui_Label11, -110);
+    lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label11, "Throttle Pos :");
+    lv_obj_set_style_text_color(ui_Label11, lv_color_hex(0xA69D9D), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label11, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label12 = lv_label_create(ui_Panel2);
     lv_obj_set_width(ui_Label12, LV_SIZE_CONTENT);   /// 1
@@ -167,15 +167,15 @@ void ui_ScreenDiag_screen_init(void)
     lv_obj_set_style_text_color(ui_Label14, lv_color_hex(0xA8A1A1), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label14, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label_Throttle_Pos = lv_label_create(ui_Panel2);
-    lv_obj_set_width(ui_Label_Throttle_Pos, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label_Throttle_Pos, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label_Throttle_Pos, -120);
-    lv_obj_set_y(ui_Label_Throttle_Pos, 10);
-    lv_obj_set_align(ui_Label_Throttle_Pos, LV_ALIGN_TOP_RIGHT);
-    lv_label_set_text(ui_Label_Throttle_Pos, "15.4 %");
-    lv_obj_set_style_text_color(ui_Label_Throttle_Pos, lv_color_hex(0xF6F2F2), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label_Throttle_Pos, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_Label_Throttle_Val = lv_label_create(ui_Panel2);
+    lv_obj_set_width(ui_Label_Throttle_Val, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label_Throttle_Val, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label_Throttle_Val, -120);
+    lv_obj_set_y(ui_Label_Throttle_Val, 10);
+    lv_obj_set_align(ui_Label_Throttle_Val, LV_ALIGN_TOP_RIGHT);
+    lv_label_set_text(ui_Label_Throttle_Val, "15.4 %");
+    lv_obj_set_style_text_color(ui_Label_Throttle_Val, lv_color_hex(0xF6F2F2), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label_Throttle_Val, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label_Engine_Load_ = lv_label_create(ui_Panel2);
     lv_obj_set_width(ui_Label_Engine_Load_, LV_SIZE_CONTENT);   /// 1
@@ -220,11 +220,11 @@ void ui_ScreenDiag_screen_destroy(void)
     ui_Button2 = NULL;
     ui_Label10 = NULL;
     ui_Panel2 = NULL;
-    ui_LabelThrottleVal = NULL;
+    ui_Label11 = NULL;
     ui_Label12 = NULL;
     ui_Label13 = NULL;
     ui_Label14 = NULL;
-    ui_Label_Throttle_Pos = NULL;
+    ui_Label_Throttle_Val = NULL;
     ui_Label_Engine_Load_ = NULL;
     ui_Label_Intake_Temp = NULL;
     ui_Label_MAF_Air_Flow_ = NULL;

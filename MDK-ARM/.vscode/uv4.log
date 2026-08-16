@@ -1,2 +1,10 @@
-Load "OBD_CAN\\OBD_CAN.axf" 
-Erase Done.Programming Done.Verify OK.Flash Load finished at 16:26:07
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\keil_core\ARM\arm5_compiler\Bin'
+Build target 'OBD_CAN'
+compiling main.c...
+../OBD_UI_Code/lvgl/src/hal/lv_hal_indev.h(30): warning:  #47-D: incompatible redefinition of macro "LV_INDEV_DEF_SCROLL_LIMIT"  (declared at line 758 of "../OBD_UI_Code/lvgl/src/misc/../../../lv_conf.h")
+  #define LV_INDEV_DEF_SCROLL_LIMIT         10
+../Core/Src/main.c: 1 warning, 0 errors
+linking...
+Program Size: Code=161138 RO-data=228354 RW-data=788 ZI-data=56308  
+"OBD_CAN\OBD_CAN.axf" - 0 Error(s), 1 Warning(s).
+Build Time Elapsed:  00:00:14
