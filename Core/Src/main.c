@@ -1,10 +1,5 @@
 /* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  */
+// ... ���һЩ�ļ�ͷ˵�� ...
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -13,22 +8,19 @@
 #include "usart.h"
 #include "gpio.h"
 #include "fsmc.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_system.h" // 
 #include <stdio.h>
-#include "bsp_ili9806g_lcd.h"
-#include "ui.h"
-#include "lvgl.h"
-#include "lv_port_disp.h"
-// 把那两个变量引过来，让 main.c 能看到它们
-extern volatile uint8_t dma_flush_flag;
-extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+int fputc(int ch, FILE *f)
+{
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -48,21 +40,12 @@ extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int fputc(int ch, FILE *f)
-{
-    // 将 printf 的字符通过串口 1 (huart1) 发送出去
-    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-    return ch;
-}
-
-
 
 /* USER CODE END 0 */
 
@@ -72,144 +55,28 @@ int fputc(int ch, FILE *f)
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
   /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_CAN1_Init();
-  MX_USART1_UART_Init();
+  MX_USART1_UART_Init();  // 串口在这里才初始化成功！
   MX_FSMC_Init();
+  MX_CAN2_Init();
+
   /* USER CODE BEGIN 2 */
-  // 1. 底层屏幕初始化
-	uint32_t *test_sram = (uint32_t *)0x6C000000;
-  uint8_t sram_is_alive = 1; // 默认它活着
-  
 
-  ILI9806G_Init();
-  ILI9806G_GramScan(5); // 跟随驱动默认扫描方向，避免强行写死
-  ILI9806G_Clear(0, 0, 800, 480);
-
-  GTP_Init_Panel(); // 初始化触摸屏
-  // 2. LVGL 核心和接口初始化
-  lv_init();
-  lv_port_disp_init();
-  lv_port_indev_init();
-  // 3. UI 界面初始化
-   ui_init();
-
-  // 4. CAN 过滤器配置
-  CAN_FilterTypeDef sFilterConfig;
-  sFilterConfig.FilterBank = 0;
-  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
-  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-  sFilterConfig.FilterIdHigh = 0x0000;
-  sFilterConfig.FilterIdLow = 0x0000;
-  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
-  sFilterConfig.FilterActivation = ENABLE;
-  sFilterConfig.SlaveStartFilterBank  = 14;
-
-  HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig);
-  HAL_CAN_Start(&hcan1);
- // printf("\r\n---HAL 库 CAN 回环测试启动！---\r\n");
+  App_System_Init();
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  uint32_t last_lvgl_time = 0;
-  uint32_t last_can_tx_time = 0;
-  uint32_t last_blink_time = 0;
-  uint8_t blink_state = 0;
-
-  while (1)
-  {
-      uint32_t current_tick = HAL_GetTick();
-
-      // ==========================================
-      // 任务 1：LVGL 心脏起搏器 (严格 5ms 跑一次)
-      // ==========================================
-        //1先算出真实过去了多少毫秒
-        uint32_t delta_time = current_tick - last_lvgl_time;
-        // 2. 如果时间差大于等于 5ms，才执行刷新
-      if (delta_time >= 5)
-      {
-          // 3. 更新上一次的时间戳
-          last_lvgl_time = current_tick;
-          
-          // 4. ? 灵魂所在：过去了多少时间，就加多少时间！
-          lv_tick_inc(delta_time); 
-          
-          // 5. 让 LVGL 刷屏
-          lv_timer_handler();
-      }
-			
-        // ==========================================
-        // 任务 2：CAN 发送任务 (严格 2000ms 发送一次)
-        // ==========================================
-        if (current_tick - last_can_tx_time >= 2000)
-        {
-          last_can_tx_time = current_tick;
-          CAN_TxHeaderTypeDef TxHeader;
-          uint32_t TxMailbox;
-          uint8_t TxData[8] = {0x02, 0x01, 0x0c, 0x00, 0x00, 0x00,0x00, 0x00};
-          
-          TxHeader.StdId = 0x7DF;                       
-          TxHeader.ExtId = 0X00;  
-          TxHeader.RTR = CAN_RTR_DATA;     
-          TxHeader.DLC = 8;     
-          TxHeader.TransmitGlobalTime = DISABLE;
-          
-          if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) == HAL_OK){
-         //   printf("已发送 OBD 请求帧...\r\n");
-          }
-        }
-        // ==========================================
-     
-        // ==========================================
-        // 任务 4：CAN 接收任务 (有空就检测，无需延时)
-        // ==========================================
-        if (HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) > 0) 
-        {
-          CAN_RxHeaderTypeDef RxHeader;
-          uint8_t RxData[8] = {0};
-          
-          HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, RxData);
-        //  printf("收到回环数据！ID:0x%x,内容：", RxHeader.StdId);
-          for(int i = 0; i < RxHeader.DLC; i++){
-         //   printf("%02x ", RxData[i]);
-          }
-        //  printf("\r\n.............\r\n");
-        }
   }
 }
-
-  /* USER CODE END 3 */
-}
-
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -258,6 +125,27 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

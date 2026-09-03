@@ -416,10 +416,6 @@ static void GTP_Touch_Down(int32_t id,int32_t x,int32_t y,int32_t w)
 static void GTP_Touch_Up( int32_t id)
 {
 	LVGL_Touch_State = 0;
-
-    /*处理触摸释放,用于触摸画板*/
-printf("? [底层] 松开!\r\n");
-
 		/*****************************************/
 		/*在此处添加自己的触摸点释放时的处理过程即可*/
 		/* pre_x[id],pre_y[id] 即为最新的释放点 ****/
