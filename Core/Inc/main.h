@@ -61,6 +61,8 @@ void Error_Handler(void);
 #define LCD_BLK_GPIO_Port GPIOF
 #define LCD_RST_Pin GPIO_PIN_11
 #define LCD_RST_GPIO_Port GPIOF
+#define BUZZER_Pin GPIO_PIN_7
+#define BUZZER_GPIO_Port GPIOG
 
 /* USER CODE BEGIN Private defines */
 

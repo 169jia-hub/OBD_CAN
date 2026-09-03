@@ -343,7 +343,7 @@ static void ILI9806G_REG_Config ( void )
 
 
 	ILI9806G_Write_Cmd(0x11); //Exit Sleep 
-	DEBUG_DELAY ();
+	HAL_Delay(120);
 	ILI9806G_Write_Cmd(0x29); // Display On 
 
 
@@ -357,20 +357,15 @@ static void ILI9806G_REG_Config ( void )
  */
 void ILI9806G_Init ( void )
 {
-	ILI9806G_GPIO_Config ();
-	ILI9806G_FSMC_Config ();
-	
-	
-	ILI9806G_Rst ();
-	ILI9806G_REG_Config ();
-	
-	//设置默认扫描方向，其中 6 模式为大部分液晶例程的默认显示方向  
-	ILI9806G_GramScan(LCD_SCAN_MODE);
-    
-	ILI9806G_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
-	ILI9806G_BackLed_Control ( ENABLE );      //点亮LCD背光灯
-}
+    ILI9806G_GPIO_Config ();
 
+    // ILI9806G_FSMC_Config ();  // 【切除毒瘤】：绝对不能在这里初始化第二次！全权交由 CubeMX 处理！
+    ILI9806G_Rst ();
+    ILI9806G_REG_Config ();
+    ILI9806G_GramScan(LCD_SCAN_MODE);
+    ILI9806G_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH); 
+    ILI9806G_BackLed_Control ( ENABLE ); 
+}
 
 /**
  * @brief  ILI9806G背光LED控制

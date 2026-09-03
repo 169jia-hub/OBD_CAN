@@ -1,10 +1,46 @@
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\keil_core\ARM\arm5_compiler\Bin'
 Build target 'OBD_CAN'
-compiling main.c...
-../OBD_UI_Code/lvgl/src/hal/lv_hal_indev.h(30): warning:  #47-D: incompatible redefinition of macro "LV_INDEV_DEF_SCROLL_LIMIT"  (declared at line 758 of "../OBD_UI_Code/lvgl/src/misc/../../../lv_conf.h")
-  #define LV_INDEV_DEF_SCROLL_LIMIT         10
-../Core/Src/main.c: 1 warning, 0 errors
+compiling app_system.c...
+..\App\app_system.h(13): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\App\app_gui.h(4): warning:  #1295-D: Deprecated declaration App_GUI_Init - give arg types
+  void App_GUI_Init();
+..\App\app_gui.h(7): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\App\app_system.c(26): warning:  #1-D: last line of file ends without a newline
+  }
+..\App\app_system.c: 4 warnings, 0 errors
+compiling bsp_ili9806g_lcd.c...
+..\Core\Src\bsp_ili9806g_lcd.c(103): warning:  #177-D: function "ILI9806G_Delay"  was declared but never referenced
+  static void ILI9806G_Delay ( __IO uint32_t nCount )
+..\Core\Src\bsp_ili9806g_lcd.c(150): warning:  #177-D: function "ILI9806G_FSMC_Config"  was declared but never referenced
+  static void ILI9806G_FSMC_Config ( void )
+..\Core\Src\bsp_ili9806g_lcd.c(58): warning:  #177-D: function "Delay"  was declared but never referenced
+  static void Delay ( __IO uint32_t nCount )
+..\Core\Src\bsp_ili9806g_lcd.c: 3 warnings, 0 errors
+compiling gt9xx.c...
+..\Touch\gt9xx.c(766): warning:  #177-D: variable "i"  was declared but never referenced
+      int32_t i = 0;
+..\Touch\gt9xx.c(767): warning:  #177-D: variable "check_sum"  was declared but never referenced
+      uint16_t check_sum = 0;
+..\Touch\gt9xx.c(768): warning:  #177-D: variable "retry"  was declared but never referenced
+      int32_t retry = 0;
+..\Touch\gt9xx.c(770): warning:  #177-D: variable "cfg_info"  was declared but never referenced
+      const uint8_t* cfg_info;
+..\Touch\gt9xx.c(771): warning:  #177-D: variable "cfg_info_len"  was declared but never referenced
+      uint8_t cfg_info_len  ;
+..\Touch\gt9xx.c(772): warning:  #177-D: variable "config"  was declared but never referenced
+  		uint8_t* config;
+..\Touch\gt9xx.c(774): warning:  #177-D: variable "cfg_num"  was declared but never referenced
+      uint8_t cfg_num =0 ;		//需要配置的寄存器个数
+..\Touch\gt9xx.c(177): warning:  #177-D: function "Delay"  was declared but never referenced
+  static void Delay(__IO uint32_t nCount)	 //简单的延时函数
+..\Touch\gt9xx.c(380): warning:  #550-D: variable "pre_x"  was set but never used
+  static int16_t pre_x[GTP_MAX_TOUCH] ={-1,-1,-1,-1,-1};
+..\Touch\gt9xx.c(381): warning:  #550-D: variable "pre_y"  was set but never used
+  static int16_t pre_y[GTP_MAX_TOUCH] ={-1,-1,-1,-1,-1};
+..\Touch\gt9xx.c: 10 warnings, 0 errors
 linking...
-Program Size: Code=161138 RO-data=228354 RW-data=788 ZI-data=56308  
-"OBD_CAN\OBD_CAN.axf" - 0 Error(s), 1 Warning(s).
-Build Time Elapsed:  00:00:14
+Program Size: Code=168180 RO-data=228384 RW-data=900 ZI-data=97972  
+"OBD_CAN\OBD_CAN.axf" - 0 Error(s), 17 Warning(s).
+Build Time Elapsed:  00:00:05

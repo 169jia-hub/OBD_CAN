@@ -23,9 +23,9 @@ extern lv_obj_t * ui_BarVolt;
 extern lv_obj_t * ui_Label_Volt;
 extern lv_obj_t * ui_LabelOdo;
 extern lv_obj_t * ui_Label_Speed;
-extern lv_obj_t * ui_Image1;
-extern lv_obj_t * ui_Image2;
-extern lv_obj_t * ui_Image3;
+extern lv_obj_t * ui_ImgWarnABS;
+extern lv_obj_t * ui_ImgWarnTire;
+extern lv_obj_t * ui_ImgWarnEngine;
 extern void ui_event_Button3(lv_event_t * e);
 extern lv_obj_t * ui_Button3;
 // CUSTOM VARIABLES

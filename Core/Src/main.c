@@ -1,10 +1,5 @@
 /* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  */
+// ... ï¿½ï¿½ï¿½Ò»Ð©ï¿½Ä¼ï¿½Í·Ëµï¿½ï¿½ ...
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -13,26 +8,19 @@
 #include "usart.h"
 #include "gpio.h"
 #include "fsmc.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "app_system.h" // 
 #include <stdio.h>
-#include "bsp_ili9806g_lcd.h"
-#include "ui.h"
-#include "lvgl.h"
-#include "lv_port_disp.h"
-#include "can.h"
-#include "lv_port_indev.h"
-#include "gt9xx.h"
-// °ÑÄÇÁ½¸ö±äÁ¿Òý¹ýÀ´£¬ÈÃ main.c ÄÜ¿´µ½ËüÃÇ
-
-extern volatile uint8_t dma_flush_flag;
-extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+int fputc(int ch, FILE *f)
+{
+    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+    return ch;
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,19 +40,12 @@ extern lv_disp_drv_t * my_dma_disp_drv;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int fputc(int ch, FILE *f)
-{
-    // ½« printf µÄ×Ö·ûÍ¨¹ý´®¿Ú 1 (huart1) ·¢ËÍ³öÈ¥
-    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-    return ch;
-}
 
 /* USER CODE END 0 */
 
@@ -74,224 +55,28 @@ int fputc(int ch, FILE *f)
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
   /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_USART1_UART_Init();
+  MX_USART1_UART_Init();  // ä¸²å£åœ¨è¿™é‡Œæ‰åˆå§‹åŒ–æˆåŠŸï¼
   MX_FSMC_Init();
   MX_CAN2_Init();
+
   /* USER CODE BEGIN 2 */
-  // 1. µ×²ãÆÁÄ»³õÊ¼»¯
 
-  
-  ILI9806G_Init();
-  ILI9806G_GramScan(5); // ¸úËæÇý¶¯Ä¬ÈÏÉ¨Ãè·½Ïò£¬±ÜÃâÇ¿ÖÆÐ´´í
-  ILI9806G_Clear(0, 0, 800, 480);
-
-  GTP_Init_Panel(); // ³õÊ¼»¯´¥ÃþÆÁ
-  // 2. LVGL ºËÐÄºÍ½Ó¿Ú³õÊ¼»¯
-  lv_init();
-  lv_port_disp_init();
-  lv_port_indev_init();
-  // 3. UI ½çÃæ³õÊ¼»¯
-  ui_init();
-  // 4. CAN ¹ýÂËÆ÷ÅäÖÃ
-  CAN_FilterTypeDef sFilterConfig = {0}; 
-  sFilterConfig.FilterBank = 14;
-  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
-  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-  sFilterConfig.FilterIdHigh = 0x0000;
-  sFilterConfig.FilterIdLow = 0x0000;
-  sFilterConfig.FilterMaskIdHigh = 0x0000; 
-  sFilterConfig.FilterMaskIdLow = 0x0000;  
-  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
-  sFilterConfig.FilterActivation = ENABLE;
-  sFilterConfig.SlaveStartFilterBank  = 14;
-
-  // STM32F4 ±ØÐë½èÓÃÀÏ´ó¸ç hcan2 È¥·ÖÅä CAN2 µÄ¹ýÂËÆ÷£¡
-  HAL_CAN_ConfigFilter(&hcan2, &sFilterConfig); 
-
-  // °Ñ hcan2 Ò²Ò»²¢Æô¶¯£¬·ÀÖ¹ CAN2 °Õ¹¤
-
-  HAL_CAN_Start(&hcan2);
-
-  // ========================================================
-  // ¡¾¹Ø¼üÐÞ¸´¡¿£ºÂÖÑ¯±äÁ¿±ØÐë·ÅÔÚ while(1) Íâ²¿£¬·ñÔòÃ¿´ÎÑ­»·¶¼»áÇåÁã£¡
-  // ========================================================
-  uint32_t last_lvgl_time = 0;
-  uint32_t last_can_tx_time = 0;
-  uint8_t obd_pids[] = {0x0D, 0x05, 0x42, 0x11, 0x04, 0x0F, 0X10};
-  uint8_t current_pid_index = 0; 
-  // ========================================================
+  App_System_Init();
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-        uint32_t current_tick = HAL_GetTick();
-
-        // ==========================================
-        // ÈÎÎñ 1£ºLVGL ÐÄÔàÆð²«Æ÷ (ÑÏ¸ñ 5ms ÅÜÒ»´Î)
-        // ==========================================
-        uint32_t delta_time = current_tick - last_lvgl_time;
-        if (delta_time >= 5)
-        {
-            last_lvgl_time = current_tick;
-            lv_tick_inc(delta_time); 
-            lv_timer_handler();
-        }
-         
-        // ==========================================
-        // ÈÎÎñ 2£ºCAN ÂÖÑ¯·¢ËÍÈÎÎñ (Ã¿ 100ms ÇÐ»»·¢ËÍÒ»¸ö PID)
-        // ==========================================
-        if (current_tick - last_can_tx_time >= 100)
-        {
-            last_can_tx_time = current_tick;
-
-            CAN_TxHeaderTypeDef TxHeader = {0}; 
-            uint32_t TxMailbox;
-            
-            uint8_t target_pid = obd_pids[current_pid_index];
-            uint8_t TxData[8] = {0x02, 0x01, target_pid, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-            TxHeader.StdId = 0x7DF;
-            TxHeader.ExtId = 0x00;
-            TxHeader.IDE = CAN_ID_STD;  
-            TxHeader.RTR = CAN_RTR_DATA;
-            TxHeader.DLC = 8;
-            TxHeader.TransmitGlobalTime = DISABLE;
-            
-            if (HAL_CAN_AddTxMessage(&hcan2, &TxHeader, TxData, &TxMailbox) == HAL_OK)
-            {
-                printf("TX Success! ·¢ËÍ³É¹¦\r\n"); 
-                current_pid_index++;
-                if (current_pid_index >= sizeof(obd_pids)) 
-                {
-                  current_pid_index = 0; 
-                }
-            } 
-            else 
-            {
-                printf("TX Error! ·¢ËÍÓÊÏä±»¶ÂËÀ\r\n"); 
-            }   
-        }
-        // ==========================================
-     
-        // ==========================================
-        // ÈÎÎñ 3: CAN ½ÓÊÕÓë UI äÖÈ¾ÈÎÎñ (ÎÞ×èÈû¼ì²â)
-        // ==========================================
-        if (HAL_CAN_GetRxFifoFillLevel(&hcan2, CAN_RX_FIFO0) > 0) 
-        {
-            CAN_RxHeaderTypeDef RxHeader;
-            uint8_t RxData[8] = {0};
-
-            if(HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
-            {
-                printf("Got Data! ÊÕµ½Êý¾Ý\r\n");
-                
-                if (RxHeader.StdId == 0x7E8) 
-                {
-                    if (RxData[1] == 0x41) 
-                    {
-                        uint8_t pid = RxData[2];
-                        uint8_t A = RxData[3];
-                        uint8_t B = RxData[4];
-
-                        switch (pid) 
-                        {
-                            case 0x0D: // ³µËÙ (Speed)
-                            {
-                                uint8_t speed = A;
-                                lv_arc_set_value(ui_Arc_Speed, speed);
-                                lv_label_set_text_fmt(ui_Label_Speed, "%d", speed);
-                                break;
-                            }
-                            case 0x05: // Ë®ÎÂ (Temp)
-                            {
-                                int8_t temp = A - 40;
-                                lv_bar_set_value(ui_BarTemp, temp, LV_ANIM_ON);
-                                lv_label_set_text_fmt(ui_Label_Temp, "Temp: %dC", temp);
-                                break;
-                            }
-                            case 0x42: // ¿ØÖÆÄ£¿éµçÑ¹ (Volt)
-                            {
-                                float volt = ((A * 256.0f) + B) / 1000.0f;
-                                // ¡¾ºËÐÄÐÞ¸Ä¡¿£º²ð³öÕûÊýºÍÐ¡Êý
-                                int volt_int = (int)volt;                          // ÕûÊý²¿·Ö
-                                int volt_frac = (int)((volt - volt_int) * 10);     // ÌáÈ¡ 1 Î»Ð¡Êý (³Ë10)
-                                
-                                lv_bar_set_value(ui_BarVolt, (int32_t)(volt * 10), LV_ANIM_ON); 
-                                // ÓÃ %d.%d ×éºÏÆðÀ´
-                                lv_label_set_text_fmt(ui_Label_Volt, "Volt: %d.%dV", volt_int, volt_frac);
-                                break;
-                            }
-                            case 0x11: // ½ÚÆøÃÅÎ»ÖÃ (Throttle Pos)
-                            {
-                                float throttle = (A * 100.0f) / 255.0f;
-                                int th_int = (int)throttle;
-                                int th_frac = (int)((throttle - th_int) * 10);
-                                
-                                lv_label_set_text_fmt(ui_Label_Throttle_Val, "%d.%d %%", th_int, th_frac);
-                                break;
-                            }
-                            case 0x04: // ·¢¶¯»ú¸ººÉ (Engine Load)
-                            {
-                                float load = (A * 100.0f) / 255.0f;
-                                int load_int = (int)load;
-                                int load_frac = (int)((load - load_int) * 10);
-                                
-                                lv_label_set_text_fmt(ui_Label_Engine_Load_, "%d.%d %%", load_int, load_frac);
-                                break;
-                            }
-                            case 0x0F: // ½øÆøÎÂ¶È (Intake Temp) - ÕûÊý£¬²»ÓÃ¸Ä
-                            {
-                                int8_t intake_temp = A - 40;
-                                lv_label_set_text_fmt(ui_Label_Intake_Temp, "%d C", intake_temp);
-                                break;
-                            }
-                            case 0x10: // ¿ÕÆøÁ÷Á¿ (MAF)
-                            {
-                                float maf = ((A * 256.0f) + B) / 100.0f;
-                                int maf_int = (int)maf;
-                                int maf_frac = (int)((maf - maf_int) * 10);
-                                
-                                lv_label_set_text_fmt(ui_Label_MAF_Air_Flow_, "%d.%d g/s", maf_int, maf_frac);
-                                break;
-                            }
-                        } 
-                    }
-                }
-            } 
-        } 
   }
-  /* USER CODE END 3 */
 }
-
 /**
   * @brief System Clock Configuration
   * @retval None
@@ -340,6 +125,27 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
